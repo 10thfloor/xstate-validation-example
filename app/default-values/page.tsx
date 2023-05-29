@@ -3,14 +3,24 @@
 import { FormMachineReactContext } from "@/machines/formMachine";
 import { useEffect } from "react";
 import { useForm, Controller } from "react-hook-form";
+import { useSelector} from '@xstate/react'
+import { formState } from '../../state/formState' 
 
 type FormData = {
   firstName: string;
   lastName: string;
 };
 
+const isSubmitting = (state: any) => state.matches("submitting")
+
 export default function DefaultValuesExample() {
-  const [state, send] = FormMachineReactContext.useActor();
+
+  const machine = FormMachineReactContext.useActorRef();
+  const submitting = useSelector(machine, isSubmitting)
+
+  useEffect(() => {
+    console.log("render")
+  })
 
   const {
     handleSubmit,
@@ -18,20 +28,20 @@ export default function DefaultValuesExample() {
     control,
     setValue,
   } = useForm<FormData>({
-    defaultValues: { firstName: "", lastName: "" },
+    defaultValues: formState.form.get(),
   });
 
   useEffect(() => {
-    if (state.matches("submitting")) {
+    if (submitting) {
       setValue("firstName", "");
       setValue("lastName", "");
     }
-  }, [state.value]);
+  }, [submitting]);
 
   return (
     <form
       onSubmit={handleSubmit((data) => {
-        send({ type: "SUBMIT_FORM" });
+        machine.send({ type: "SUBMIT_FORM" });
       })}
     >
       <Controller
@@ -46,11 +56,7 @@ export default function DefaultValuesExample() {
               placeholder="First name"
               onChange={({ currentTarget: { value } }) => {
                 onChange(value);
-                send({
-                  type: "SET_FORM_INPUT_VALUE",
-                  key: "firstName",
-                  value: value,
-                });
+                formState.form.firstName.set(value)
               }}
               value={value}
             />
@@ -63,7 +69,7 @@ export default function DefaultValuesExample() {
         control={control}
         name="lastName"
         rules={{
-          required: { value: true, message: "Las name is required." },
+          required: { value: true, message: "Last name is required." },
         }}
         render={({ field: { onChange, value } }) => {
           return (
@@ -71,11 +77,7 @@ export default function DefaultValuesExample() {
               placeholder="Last name"
               onChange={({ currentTarget: { value } }) => {
                 onChange(value);
-                send({
-                  type: "SET_FORM_INPUT_VALUE",
-                  key: "lastName",
-                  value,
-                });
+                formState.form.lastName.set(value)
               }}
               value={value}
             />

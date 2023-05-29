@@ -1,35 +1,18 @@
 "use client";
 
 import { FormMachineReactContext } from "@/machines/formMachine";
-import { useForm, Controller } from "react-hook-form";
+import { useForm, Controller, appendErrors } from "react-hook-form";
+import { observer } from '@legendapp/state/react'
 
-type FormData = {
-  firstName: string;
-  lastName: string;
-};
+import { formState, formState as state } from '../../state/formState'
+import { useEffect } from "react";
 
-export default function ValuesExample() {
-  const [state, send] = FormMachineReactContext.useActor();
 
-  const {
-    handleSubmit,
-    formState: { errors },
-    control,
-  } = useForm<FormData>({
-    values: {
-      firstName: state.context.form.firstName,
-      lastName: state.context.form.lastName,
-    },
-  });
-
+const FirstNameInput = (props: any) => {
   return (
-    <form
-      onSubmit={handleSubmit((data) => {
-        send({ type: "SUBMIT_FORM" });
-      })}
-    >
+    <>
       <Controller
-        control={control}
+        control={props.control}
         name="firstName"
         rules={{
           required: { value: true, message: "First name is required." },
@@ -39,44 +22,73 @@ export default function ValuesExample() {
             <input
               placeholder="First name"
               onChange={({ currentTarget: { value } }) => {
-                send({
-                  type: "SET_FORM_INPUT_VALUE",
-                  key: "firstName",
-                  value: value,
-                });
+                state.form.firstName.set(value)
               }}
               value={value}
             />
           );
         }}
       />
-      {errors.firstName && <span>This field is required</span>}
+      {props.errors && <span>This field is required</span>}
+    </>
+  )
+}
 
+const LastNameInput = (props: any) => {
+
+  return (
+    <>
       <Controller
-        control={control}
+        control={props.control}
         name="lastName"
         rules={{
-          required: { value: true, message: "Las name is required." },
+          required: { value: true, message: "Last name is required." },
         }}
         render={({ field: { value } }) => {
           return (
             <input
               placeholder="Last name"
               onChange={({ currentTarget: { value } }) => {
-                send({
-                  type: "SET_FORM_INPUT_VALUE",
-                  key: "lastName",
-                  value,
-                });
+                state.form.lastName.set(value)
               }}
               value={value}
             />
           );
         }}
       />
-      {errors.lastName && <span>This field is required</span>}
+      {props.errors && <span>This field is required</span>}
+    </>
+  )
+}
 
+
+export default observer(function ValuesExample() {
+  const machine = FormMachineReactContext.useActorRef();
+
+  useEffect(() => {
+    console.log("render")
+  })
+
+  const {
+    formState: { errors },
+    handleSubmit,
+    control
+  } = useForm({
+    values: {
+      firstName: state.form.firstName.get(), 
+      lastName: state.form.lastName.get()
+    }
+  });
+
+  return (
+    <form
+      onSubmit={handleSubmit((data) => {
+        machine.send({ type: "SUBMIT_FORM" });
+      })}
+    >
+      <FirstNameInput control={control} errors={errors.firstName} />
+      <LastNameInput control={control} errors={errors.lastName} />
       <input type="submit" />
     </form>
   );
-}
+})
