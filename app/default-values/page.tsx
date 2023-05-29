@@ -5,11 +5,15 @@ import { useEffect } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { useSelector} from '@xstate/react'
 import { formState } from '../../state/formState' 
+import { Static, Type } from '@sinclair/typebox'
+import { typeboxResolver} from '@hookform/resolvers/typebox'
 
-type FormData = {
-  firstName: string;
-  lastName: string;
-};
+const FormData = Type.Object({
+  firstName: Type.String({ required: true, minLength: 1, maxLength: 100 }), 
+  lastName: Type.String({ required: true, minLength: 1, maxLength: 100 })
+})
+
+type FormData = Static<typeof FormData>     
 
 const isSubmitting = (state: any) => state.matches("submitting")
 
@@ -29,6 +33,7 @@ export default function DefaultValuesExample() {
     setValue,
   } = useForm<FormData>({
     defaultValues: formState.form.get(),
+    resolver: typeboxResolver(FormData)
   });
 
   useEffect(() => {

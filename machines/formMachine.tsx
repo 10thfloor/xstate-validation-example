@@ -2,8 +2,6 @@ import { formState } from "@/state/formState";
 import { createActorContext } from "@xstate/react";
 import { createMachine } from "xstate";
 
-
-
 export const formMachine = createMachine(
   {
     id: "formMachine",

@@ -1,12 +1,21 @@
 "use client";
 
 import { FormMachineReactContext } from "@/machines/formMachine";
-import { useForm, Controller, appendErrors } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { observer } from '@legendapp/state/react'
 
-import { formState, formState as state } from '../../state/formState'
+import { formState as state } from '../../state/formState'
 import { useEffect } from "react";
 
+import { Static, Type } from '@sinclair/typebox'
+import { typeboxResolver } from '@hookform/resolvers/typebox'
+
+const FormData = Type.Object({
+  firstName: Type.String({ required: true, minLength: 1, maxLength: 100 }),
+  lastName: Type.String({ required: true, minLength: 1, maxLength: 100 })
+})
+
+type FormData = Static<typeof FormData>
 
 const FirstNameInput = (props: any) => {
   return (
@@ -75,9 +84,10 @@ export default observer(function ValuesExample() {
     control
   } = useForm({
     values: {
-      firstName: state.form.firstName.get(), 
+      firstName: state.form.firstName.get(),
       lastName: state.form.lastName.get()
-    }
+    },
+    resolver: typeboxResolver(FormData)
   });
 
   return (
